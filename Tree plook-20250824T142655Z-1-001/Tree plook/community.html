@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ชุมชนรักษ์โลก</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body, html {
+      height: 100%;
+      font-family: "Sarabun", sans-serif;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      color: #1f2937;
+    }
+    
+    header {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      color: #fff;
+      padding: 20px 16px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 20px;
+      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    
+    @keyframes shimmer {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(180deg); }
+    }
+    
+    main {
+      flex: 1;
+      padding: 20px 16px 100px;
+      overflow-y: auto;
+      max-width: 640px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    section {
+      margin-bottom: 32px;
+      animation: fadeInUp 0.6s ease-out forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    
+    section:nth-child(1) { animation-delay: 0.1s; }
+    section:nth-child(2) { animation-delay: 0.2s; }
+    section:nth-child(3) { animation-delay: 0.3s; }
+    
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    h2 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: #166534;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    h2::before {
+      content: '';
+      width: 4px;
+      height: 20px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border-radius: 2px;
+    }
+
+    /* Enhanced friend cards */
+    .friend-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      border: 1px solid rgba(34, 197, 94, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .friend-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #22c55e, #16a34a, #22c55e);
+      background-size: 200% 100%;
+      animation: gradientShift 3s ease-in-out infinite;
+    }
+    
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    
+    .friend-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(34, 197, 94, 0.2);
+    }
+    
+    .friend-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .friend-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 600;
+      color: #166534;
+      border: 2px solid rgba(34, 197, 94, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .friend-card:hover .friend-avatar {
+      transform: scale(1.1);
+      border-color: #22c55e;
+    }
+    
+    .friend-name {
+      font-weight: 500;
+      font-size: 16px;
+      color: #374151;
+    }
+    
+    .btn {
+      border: none;
+      padding: 10px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255,255,255,0.3);
+      border-radius: 50%;
+      transition: all 0.4s ease;
+      transform: translate(-50%, -50%);
+    }
+    
+    .btn:active::before {
+      width: 200%;
+      height: 200%;
+    }
+    
+    .btn-add {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+    }
+    
+    .btn-add:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    }
+    
+    .btn-coop {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #000;
+      box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+    }
+    
+    .btn-coop:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+    }
+
+    /* Enhanced feed cards */
+    .feed-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      border: 1px solid rgba(34, 197, 94, 0.1);
+    }
+    
+    .feed-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    
+    .feed-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .feed-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #bbf7d0, #86efac);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #166534;
+      border: 2px solid rgba(34, 197, 94, 0.3);
+    }
+    
+    .feed-name {
+      font-weight: 600;
+      font-size: 16px;
+      color: #374151;
+    }
+    
+    .feed-content {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #4b5563;
+      margin-bottom: 12px;
+    }
+    
+    .feed-img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-top: 12px;
+      transition: all 0.3s ease;
+    }
+    
+    .feed-img:hover {
+      transform: scale(1.02);
+    }
+    
+    .feed-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 20px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    
+    .feed-action {
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .feed-action:hover {
+      background: rgba(34, 197, 94, 0.1);
+      color: #16a34a;
+      transform: scale(1.05);
+    }
+
+    /* Enhanced leaderboard */
+    .leaderboard {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border: 1px solid rgba(34, 197, 94, 0.1);
+    }
+    
+    .leader-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f3f4f6;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+    
+    .leader-row:last-child {
+      border-bottom: none;
+    }
+    
+    .leader-row:hover {
+      background: rgba(34, 197, 94, 0.05);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 0 -12px;
+    }
+    
+    .leader-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .leader-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+    }
+    
+    .tree-count {
+      font-size: 12px;
+      color: #22c55e;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    
+    .leader-score {
+      font-weight: 600;
+      color: #16a34a;
+    }
+    
+    .feed-time {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-left: auto;
+    }
+
+    /* Enhanced bottom navigation */
+    .bottom {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: center;
+      padding: 12px;
+      background: transparent;
+      z-index: 1000;
+    }
+    
+    .bottom > div {
+      width: clamp(320px, 92vw, 540px);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 12px 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+    
+    .navbtn {
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      color: #6b7280;
+      font-size: 14px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .navbtn small {
+      font-size: 11px;
+      font-weight: 500;
+    }
+    
+    .navbtn.active {
+      color: #16a34a;
+      font-weight: 600;
+      background: rgba(34, 197, 94, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    .navbtn.active::before {
+      content: '';
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 3px;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      border-radius: 2px;
+    }
+    
+    .navbtn:hover:not(.active) {
+      color: #374151;
+      background: rgba(0,0,0,0.05);
+      transform: translateY(-1px);
+    }
+    
+    /* Responsive design */
+    @media (max-width: 640px) {
+      main {
+        padding: 16px 12px 100px;
+      }
+      
+      .friend-card, .feed-card, .leaderboard {
+        padding: 14px;
+      }
+      
+      h2 {
+        font-size: 17px;
+      }
+      
+      .friend-avatar {
+        width: 44px;
+        height: 44px;
+      }
+      
+      .feed-avatar {
+        width: 38px;
+        height: 38px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header> ชุมชนรักษ์โลก</header>
+  <main>
+    <!-- leaderboard -->
+    <section>
+      <h2>🏆 อันดับเพื่อน</h2>
+      <div class="leaderboard">
+        <div class="leader-row">
+          <div class="leader-info">
+            <div class="leader-name">1 อนันต์</div>
+            <div class="tree-count"> ปลูกไป 15 ต้น</div>
+          </div>
+          <div class="leader-score">450 คะแนน</div>
+        </div>
+        <div class="leader-row">
+          <div class="leader-info">
+            <div class="leader-name">2 บุษบา</div>
+            <div class="tree-count"> ปลูกไป 12 ต้น</div>
+          </div>
+          <div class="leader-score">390 คะแนน</div>
+        </div>
+        <div class="leader-row">
+          <div class="leader-info">
+            <div class="leader-name">3 คุณ</div>
+            <div class="tree-count"> ปลูกไป 8 ต้น</div>
+          </div>
+          <div class="leader-score">320 คะแนน</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- friends list -->
+    <section id="friends-section">
+      <h2 onclick="toggleFriends()" style="cursor: pointer; user-select: none;">
+         เพื่อนของฉัน 
+        <span id="toggle-icon" style="font-size: 14px; color: #6b7280; transition: all 0.3s ease;">▼</span>
+      </h2>
+      <div id="friends-list" style="max-height: 300px; overflow: hidden; transition: all 0.5s ease;">
+        <div class="friend-card">
+          <div class="friend-info">
+            <div class="friend-avatar">A</div>
+            <div class="friend-name">อนันต์</div>
+          </div>
+          <button class="btn btn-coop"> ปลูกด้วยกัน</button>
+        </div>
+        <div class="friend-card">
+          <div class="friend-info">
+            <div class="friend-avatar">B</div>
+            <div class="friend-name">บุษบา</div>
+          </div>
+          <button class="btn btn-coop"> ปลูกด้วยกัน</button>
+        </div>
+        <div class="friend-card">
+          <div class="friend-info">
+            <div class="friend-avatar">+</div>
+            <div class="friend-name">เพิ่มเพื่อน</div>
+          </div>
+          <button class="btn btn-add"> แอด</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- community feed -->
+    <section>
+      <h2> ฟีดกิจกรรมเพื่อน</h2>
+      <div class="feed-card">
+        <div class="feed-header">
+          <div class="feed-avatar">A</div>
+          <div class="feed-name">อนันต์</div>
+          <div class="feed-time">2 ชั่วโมงที่แล้ว</div>
+        </div>
+        <div class="feed-content">เพิ่งปลูกต้นมะม่วงใหม่ที่สวนหลังบ้าน  อีกไม่กี่ปีก็จะได้กินมะม่วงหวานๆ แล้ว!</div>
+        <img class="feed-img" src="https://thecitizen.plus/wp-content/uploads/2021/07/11-1024x683.jpg" alt="Tree"/>
+        <div class="feed-actions">
+          <div class="feed-action">❤️ ถูกใจ 12</div>
+          <div class="feed-action">💬 แสดงความคิดเห็น</div>
+          <div class="feed-action"> แชร์</div>
+        </div>
+      </div>
+      <div class="feed-card">
+        <div class="feed-header">
+          <div class="feed-avatar">B</div>
+          <div class="feed-name">บุษบา</div>
+          <div class="feed-time">5 ชั่วโมงที่แล้ว</div>
+        </div>
+        <div class="feed-content">วันนี้ไปปลูกต้นไผ่กับชุมชนที่สวนสาธารณะ  ต้นไผ่เติบโตเร็วและช่วยดูดซับ CO2 ได้ดีมาก!</div>
+        <img class="feed-img" src="https://www.technologychaoban.com/wp-content/uploads/2017/05/CH-1-1024x683.jpg" alt="Bamboo"/>
+        <div class="feed-actions">
+          <div class="feed-action">❤️ ถูกใจ 8</div>
+          <div class="feed-action">💬 แสดงความคิดเห็น</div>
+          <div class="feed-action"> แชร์</div>
+        </div>
+      </div>
+      <div class="feed-card">
+        <div class="feed-header">
+          <div class="feed-avatar">A</div>
+          <div class="feed-name">อนันต์</div>
+          <div class="feed-time">1 วันที่แล้ว</div>
+        </div>
+        <div class="feed-content">ปลูกต้นกล้วยไข่ 3 ต้น ข้างบ้าน  หวังว่าจะได้เก็บกล้วยกินเอง ไม่ต้องซื้อจากตลาด</div>
+        <img class="feed-img" src="https://www.kasettambon.com/wp-content/uploads/2022/07/%E0%B8%81%E0%B8%A5%E0%B9%89%E0%B8%A7%E0%B8%A2%E0%B9%84%E0%B8%82%E0%B9%88%E0%B8%94%E0%B8%B3-600x800.jpg" alt="Banana Tree"/>
+        <div class="feed-actions">
+          <div class="feed-action">❤️ ถูกใจ 15</div>
+          <div class="feed-action">💬 แสดงความคิดเห็น</div>
+          <div class="feed-action"> แชร์</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- bottom nav -->
+  <div class="bottom">
+    <div>
+      <button class="navbtn" onclick="location.href='dashbroad.html'">
+        <div>🏠</div>
+        <small>หน้าหลัก</small>
+      </button>
+      <button class="navbtn" onclick="location.href='map.html'">
+        <div>🗺️</div>
+        <small>แผนที่</small>
+      </button>
+      <button class="navbtn active" onclick="location.href='community.html'">
+        <div>👥</div>
+        <small>ชุมชน</small>
+      </button>
+      <button class="navbtn" onclick="location.href='profile.html'">
+        <div>👤</div>
+        <small>โปรไฟล์</small>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let friendsVisible = true;
+    
+    function toggleFriends() {
+      const friendsList = document.getElementById('friends-list');
+      const toggleIcon = document.getElementById('toggle-icon');
+      
+      if (friendsVisible) {
+        friendsList.style.maxHeight = '0px';
+        friendsList.style.opacity = '0';
+        friendsList.style.marginBottom = '0px';
+        toggleIcon.textContent = '▶';
+        toggleIcon.style.transform = 'rotate(0deg)';
+      } else {
+        friendsList.style.maxHeight = '300px';
+        friendsList.style.opacity = '1';
+        friendsList.style.marginBottom = '16px';
+        toggleIcon.textContent = '▼';
+        toggleIcon.style.transform = 'rotate(0deg)';
+      }
+      
+      friendsVisible = !friendsVisible;
+    }
+
+    // Add click animations
+    document.querySelectorAll('.btn, .feed-action, .navbtn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        // Create ripple effect
+        const ripple = document.createElement('span');
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        ripple.classList.add('ripple');
+        
+        this.appendChild(ripple);
+        
+        setTimeout(() => {
+          ripple.remove();
+        }, 600);
+      });
+    });
+
+    // Add CSS for ripple effect
+    const style = document.createElement('style');
+    style.textContent = `
+      .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        pointer-events: none;
+      }
+      
+      @keyframes ripple {
+        to {
+          transform: scale(4);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>โปรไฟล์ - ชุมชนรักษ์โลก</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body, html {
+      height: 100%;
+      font-family: "Sarabun", sans-serif;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      color: #1f2937;
+    }
+    
+    header {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      color: #fff;
+      padding: 20px 16px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 20px;
+      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    
+    @keyframes shimmer {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(180deg); }
+    }
+    
+    main {
+      flex: 1;
+      padding: 20px 16px 100px;
+      overflow-y: auto;
+      max-width: 640px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Profile Card */
+    .profile-card {
+      text-align: center;
+      padding: 24px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(34, 197, 94, 0.1);
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+    
+    .profile-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #22c55e, #16a34a, #22c55e);
+      background-size: 200% 100%;
+      animation: gradientShift 3s ease-in-out infinite;
+    }
+    
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .profile-avatar {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+    
+    .profile-card img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid #22c55e;
+      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+      transition: all 0.3s ease;
+      object-fit: cover;
+    }
+    
+    .profile-card img:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 32px rgba(34, 197, 94, 0.4);
+    }
+    
+    .edit-avatar-btn {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      border: 3px solid #fff;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+    
+    .edit-avatar-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+    }
+    
+    .profile-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      border: 2px solid #fff;
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+    }
+    
+    .profile-name {
+      position: relative;
+      display: inline-block;
+      margin: 16px 0 8px;
+      color: #166534;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    
+    .edit-name-btn {
+      margin-left: 8px;
+      background: none;
+      border: none;
+      color: #6b7280;
+      cursor: pointer;
+      font-size: 16px;
+      opacity: 0.7;
+      transition: all 0.3s ease;
+    }
+    
+    .edit-name-btn:hover {
+      opacity: 1;
+      color: #22c55e;
+      transform: scale(1.1);
+    }
+    
+    .profile-bio {
+      color: #6b7280;
+      font-size: 15px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+      position: relative;
+      padding: 12px;
+      background: rgba(34, 197, 94, 0.05);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .profile-bio:hover {
+      background: rgba(34, 197, 94, 0.1);
+    }
+    
+    .profile-bio::after {
+      content: '✏️';
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 12px;
+      opacity: 0.5;
+    }
+    
+    /* Stats Grid */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+    }
+    
+    .stat {
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      border-radius: 16px;
+      padding: 18px 12px;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stat::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+    }
+    
+    .stat:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.15);
+      border-color: #22c55e;
+    }
+    
+    .stat h3 {
+      margin: 0 0 4px 0;
+      color: #166534;
+      font-size: 22px;
+      font-weight: 700;
+    }
+    
+    .stat span {
+      font-size: 13px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    
+    /* Section Styles */
+    .section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border: 1px solid rgba(34, 197, 94, 0.1);
+      animation: fadeInUp 0.6s ease-out forwards;
+      opacity: 0;
+    }
+    
+    .section:nth-child(2) { animation-delay: 0.1s; }
+    .section:nth-child(3) { animation-delay: 0.2s; }
+    .section:nth-child(4) { animation-delay: 0.3s; }
+    
+    .section h3 {
+      margin: 0 0 16px 0;
+      color: #166534;
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .section h3::before {
+      content: '';
+      width: 4px;
+      height: 20px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border-radius: 2px;
+    }
+    
+    /* Activity Items */
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+    
+    .item:last-child { 
+      border-bottom: none; 
+    }
+    
+    .item:hover {
+      background: rgba(34, 197, 94, 0.05);
+      border-radius: 8px;
+      padding: 14px 12px;
+      margin: 0 -12px;
+    }
+    
+    .item-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .item-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    
+    .item-text {
+      color: #374151;
+      font-weight: 500;
+    }
+    
+    .item-value {
+      color: #16a34a;
+      font-weight: 600;
+      padding: 4px 12px;
+      background: rgba(34, 197, 94, 0.1);
+      border-radius: 12px;
+      font-size: 13px;
+    }
+    
+    /* Friends Section */
+    .friend-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f3f4f6;
+      transition: all 0.3s ease;
+    }
+    
+    .friend-item:last-child { border-bottom: none; }
+    
+    .friend-item:hover {
+      background: rgba(34, 197, 94, 0.05);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 0 -12px;
+    }
+    
+    .friend-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .friend-avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #bbf7d0, #86efac);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #166534;
+      border: 2px solid rgba(34, 197, 94, 0.3);
+      font-size: 14px;
+    }
+    
+    .friend-name {
+      color: #374151;
+      font-weight: 500;
+    }
+    
+    .friend-score {
+      color: #16a34a;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      background: #fff;
+      border-radius: 20px;
+      padding: 24px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      transform: scale(0.9);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .modal.show .modal-content {
+      transform: scale(1);
+      opacity: 1;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #166534;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #6b7280;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+    
+    .close-btn:hover {
+      background: rgba(107, 114, 128, 0.1);
+      color: #374151;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: #22c55e;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    }
+    
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      font-size: 14px;
+    }
+    
+    .btn-cancel {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    
+    .btn-cancel:hover {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    
+    .btn-save {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+    
+    .btn-save:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+    }
+
+    /* Avatar Upload */
+    .avatar-upload {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    
+    .avatar-preview {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid #22c55e;
+      object-fit: cover;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .avatar-preview:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+    }
+    
+    .avatar-upload-btn {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: #22c55e;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+    }
+    
+    #avatarInput {
+      display: none;
+    }
+
+    /* Enhanced bottom navigation */
+    .bottom {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: center;
+      padding: 12px;
+      background: transparent;
+      z-index: 1000;
+    }
+    
+    .bottom > div {
+      width: clamp(320px, 92vw, 540px);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 12px 8px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+    
+    .navbtn {
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      color: #6b7280;
+      font-size: 14px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .navbtn small {
+      font-size: 11px;
+      font-weight: 500;
+    }
+    
+    .navbtn.active {
+      color: #16a34a;
+      font-weight: 600;
+      background: rgba(34, 197, 94, 0.1);
+      transform: translateY(-2px);
+    }
+    
+    .navbtn.active::before {
+      content: '';
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 20px;
+      height: 3px;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      border-radius: 2px;
+    }
+    
+    .navbtn:hover:not(.active) {
+      color: #374151;
+      background: rgba(0,0,0,0.05);
+      transform: translateY(-1px);
+    }
+    
+    /* Responsive design */
+    @media (max-width: 640px) {
+      main {
+        padding: 16px 12px 100px;
+      }
+      
+      .profile-card {
+        padding: 20px;
+      }
+      
+      .profile-card img {
+        width: 100px;
+        height: 100px;
+      }
+      
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      
+      .stat {
+        padding: 14px 10px;
+      }
+      
+      .section {
+        padding: 16px;
+      }
+      
+      .modal-content {
+        width: 95%;
+        padding: 20px;
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
+      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+    </svg>
+    โปรไฟล์ของฉัน
+  </header>
+  
+  <main>
+    <div class="profile-card">
+      <div class="profile-avatar">
+        <img id="profileImage" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="avatar">
+        <div class="profile-badge">🌟</div>
+        <button class="edit-avatar-btn" onclick="openAvatarModal()">📷</button>
+      </div>
+      <div class="profile-name">
+        <span id="profileName">Thanaphum D.</span>
+        <button class="edit-name-btn" onclick="openNameModal()">✏️</button>
+      </div>
+      <div class="profile-bio" id="profileBio" onclick="openBioModal()">
+        🌱 สมาชิก ชุมชนรักษ์โลก | นักปลูกต้นไม้มืออาชีพ<br>
+        🏆 เป้าหมาย: ปลูกต้นไม้ 50 ต้นในปีนี้
+      </div>
+      
+      <div class="stats">
+        <div class="stat">
+          <h3>1,250</h3>
+          <span>คะแนนรวม</span>
+        </div>
+        <div class="stat">
+          <h3>12</h3>
+          <span>ต้นไม้ที่ปลูก</span>
+        </div>
+        <div class="stat">
+          <h3>8</h3>
+          <span>สตรีค (วัน)</span>
+        </div>
+        <div class="stat">
+          <h3>5.2 kg</h3>
+          <span>ลดคาร์บอน</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color: #3b82f6;">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.5c0-.8.2-1.6.7-2.3C7.1 14.8 9.4 14 12 14s4.9.8 6.3 2.2c.5.7.7 1.5.7 2.3V19z"/>
+        </svg>
+        กิจกรรมล่าสุด
+      </h3>
+      <div class="item">
+        <div class="item-left">
+          <div class="item-icon">♻️</div>
+          <div class="item-text">รีไซเคิลขวดพลาสติก 5 ใบ</div>
+        </div>
+        <div class="item-value">+50 คะแนน</div>
+      </div>
+      <div class="item">
+        <div class="item-left">
+          <div class="item-icon">🌿</div>
+          <div class="item-text">ปลูกต้นมะม่วง 1 ต้น</div>
+        </div>
+        <div class="item-value">+60 คะแนน</div>
+      </div>
+      <div class="item">
+        <div class="item-left">
+          <div class="item-icon">⚡</div>
+          <div class="item-text">ปิดไฟห้องเรียนตลอดวัน</div>
+        </div>
+        <div class="item-value">+40 คะแนน</div>
+      </div>
+      <div class="item">
+        <div class="item-left">
+          <div class="item-icon">🚶</div>
+          <div class="item-text">เดินแทนขับรถ 2 กม.</div>
+        </div>
+        <div class="item-value">+30 คะแนน</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color: #22c55e;">
+          <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A3.015 3.015 0 0 0 16.76 6c-.8 0-1.54.37-2.01 1.01L12 10.5 9.25 7.01C8.78 6.37 8.04 6 7.24 6a3.015 3.015 0 0 0-3.2 2.37L1.5 16H4v6h2v-6h2.5l1.5-4.5L12 14.5l2-3 1.5 4.5H18v6h2zM12.5 11.5c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5S11 9.17 11 10.5s.67 1 1.5 1z"/>
+        </svg>
+        เพื่อนร่วมทีม
+      </h3>
+      <div class="friend-item">
+        <div class="friend-info">
+          <div class="friend-avatar">A</div>
+          <div class="friend-name">อนันต์</div>
+        </div>
+        <div class="friend-score">+320 คะแนน</div>
+      </div>
+      <div class="friend-item">
+        <div class="friend-info">
+          <div class="friend-avatar">B</div>
+          <div class="friend-name">บุษบา</div>
+        </div>
+        <div class="friend-score">+250 คะแนน</div>
+      </div>
+      <div class="friend-item">
+        <div class="friend-info">
+          <div class="friend-avatar">C</div>
+          <div class="friend-name">จิราภา</div>
+        </div>
+        <div class="friend-score">+150 คะแนน</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color: #f59e0b;">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        ความสำเร็จ
+      </h3>
+      <div class="item">
+        <div class="item-left">
+          <div class="item-icon">🥇</div>
+          <div class="item-text">นักปลูกต้นไม้ระดับทอง</div>
+        </div>
+        <div class="item-value">สำเร็จแล้ว</div>
+      </div>
+      <div class="item">
+        <div class="item-left">
+          <div class="item-icon">🔥</div>
+          <div class="item-text">สตรีค 7 วันติดต่อกัน</div>
+        </div>
+        <div class="item-value">สำเร็จแล้ว</div>
+      </div>
+      <div class="

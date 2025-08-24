@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ลงชื่อเข้าสู่ระบบ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Sarabun', sans-serif;
+      background: linear-gradient(to bottom right, #f0fff4, #c6f6d5); /* เขียวอ่อนสบายตา */
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-container {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px 30px;
+      width: 90%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .login-container h2 {
+      margin-bottom: 25px;
+      font-size: 28px;
+      color: #2f855a;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: #f9f9f9;
+      font-size: 15px;
+      color: #333;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: #38a169;
+      background: #fff;
+    }
+
+    .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      width: 22px;
+      cursor: pointer;
+      opacity: 0.6;
+    }
+
+    .input-group.password {
+      position: relative;
+    }
+
+    .forgot {
+      text-align: right;
+      display: block;
+      font-size: 13px;
+      margin-top: -12px;
+      margin-bottom: 15px;
+      color: #555;
+      text-decoration: underline;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 15px;
+      font-size: 16px;
+      cursor: pointer;
+      font-family: 'Sarabun', sans-serif;
+      margin-top: 10px;
+      transition: 0.2s;
+    }
+
+    .login-btn {
+      background-color: #38a169;
+      color: #fff;
+    }
+    .login-btn:hover {
+      background-color: #2f855a;
+    }
+
+    .google-btn {
+      background-color: #fff;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid #ccc;
+    }
+
+    .google-btn img {
+      width: 20px;
+    }
+
+    .register-btn {
+      background: transparent;
+      color: #38a169;
+      text-decoration: underline;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <h2>ลงชื่อเข้าสู่ระบบ</h2>
+
+    <!-- Email -->
+    <div class="input-group">
+      <input type="text" placeholder="อีเมล / เบอร์โทรศัพท์">
+    </div>
+
+    <!-- Password -->
+    <div class="input-group password">
+      <input type="password" placeholder="รหัสผ่าน" id="password">
+      <img class="toggle-password" src="https://cdn-icons-png.flaticon.com/512/565/565655.png" id="togglePassword" alt="toggle">
+    </div>
+
+   <a href="forget.html" class="forgot">ลืมรหัสผ่าน?</a>
+
+   <a href="dashbroad.html">
+     <button class="login-btn">เข้าสู่ระบบ</button>
+   </a>
+
+   <button class="google-btn">
+     <img src="https://cdn-icons-png.flaticon.com/512/281/281764.png" alt="Google">
+     เข้าสู่ระบบด้วย Google
+   </button>
+
+   <a href="apply.html">
+     <button class="register-btn">ยังไม่มีบัญชี? สมัครสมาชิก</button>
+   </a>
+  </div>
+
+  <script>
+    const togglePassword = document.getElementById("togglePassword");
+    const passwordInput = document.getElementById("password");
+
+    togglePassword.addEventListener("click", () => {
+      const type = passwordInput.type === "password" ? "text" : "password";
+      passwordInput.type = type;
+      togglePassword.src = type === "password"
+        ? "https://cdn-icons-png.flaticon.com/512/565/565655.png"
+        : "https://cdn-icons-png.flaticon.com/512/159/159604.png";
+    });
+  </script>
+
+</body>
+</html>

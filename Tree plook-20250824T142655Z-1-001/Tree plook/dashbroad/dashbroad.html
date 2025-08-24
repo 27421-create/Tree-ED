@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>Green AR Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Font & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    * {margin:0; padding:0; box-sizing:border-box;}
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: linear-gradient(to bottom, #00B050 30%, #1a1a1a 30%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: #00B050;
+      color: #fff;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+    }
+    header .points {
+      background: rgba(255,255,255,0.2);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-weight: bold;
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: #fff;
+      border-top-left-radius: 25px;
+      border-top-right-radius: 25px;
+    }
+    .tree-container {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .tree-stage {
+      font-size: 100px;
+      animation: sway 3s ease-in-out infinite;
+    }
+    @keyframes sway {
+      0%,100% { transform: rotate(-2deg);}
+      50% { transform: rotate(2deg);}
+    }
+
+    .tree-info {
+      background: #f7fdf8;
+      border-radius: 20px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    .tree-name { font-size: 18px; font-weight: bold; color:#2d5016; }
+    .progress-bar {
+      background:#eee; height:10px; border-radius:8px; margin:10px 0; overflow:hidden;
+    }
+    .progress-fill {
+      background: linear-gradient(90deg,#4CAF50,#8BC34A);
+      height:100%; width:35%;
+      transition: width 0.3s ease;
+    }
+    .progress-text { font-size:14px; color:#666; }
+
+    /* Activities */
+    .activities-grid {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:15px; margin-top:20px;
+    }
+    .activity-card {
+      background:#fff;
+      border-radius:15px;
+      padding:15px;
+      text-align:center;
+      border:2px solid transparent;
+      cursor:pointer;
+      transition:0.2s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .activity-card:hover { transform:translateY(-4px); }
+    .activity-card.selected { border-color:#00B050; background:#f0fff4; }
+    .activity-icon { font-size:28px; color:#00B050; margin-bottom:8px; }
+    .activity-title { font-size:14px; font-weight:bold; }
+    .activity-reward { font-size:12px; color:#4CAF50; }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      display:flex; justify-content:space-around;
+      background:#fff; padding:12px 0;
+      border-top:1px solid #ddd;
+    }
+    .nav-item { text-align:center; font-size:12px; color:#666; cursor:pointer;}
+    .nav-item i { font-size:20px; display:block; margin-bottom:4px;}
+    .nav-item.active { color:#00B050; font-weight:bold; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="logo">🌱 Green AR</div>
+    <div class="points"><i class="fa-solid fa-coins"></i> 1,250</div>
+  </header>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="tree-container">
+      <div class="tree-stage" id="treeStage">🌱</div>
+      <div class="tree-info">
+        <div class="tree-name">ต้นมะม่วงของคุณ</div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-text" id="progressText">ความคืบหน้า: 35% | ต่ออีก 850 คะแนนจะโตเป็นต้นไม้</div>
+      </div>
+    </div>
+
+    <div class="activities-grid">
+      <div class="activity-card" onclick="selectActivity(this,'recycle')">
+        <div class="activity-icon"><i class="fa-solid fa-recycle"></i></div>
+        <div class="activity-title">รีไซเคิล</div>
+        <div class="activity-reward">+50 คะแนน</div>
+      </div>
+      <div class="activity-card" onclick="selectActivity(this,'walk')">
+        <div class="activity-icon"><i class="fa-solid fa-person-walking"></i></div>
+        <div class="activity-title">เดิน/จักรยาน</div>
+        <div class="activity-reward">+30 คะแนน</div>
+      </div>
+      <div class="activity-card" onclick="selectActivity(this,'energy')">
+        <div class="activity-icon"><i class="fa-solid fa-bolt"></i></div>
+        <div class="activity-title">ประหยัดไฟ</div>
+        <div class="activity-reward">+40 คะแนน</div>
+      </div>
+      <div class="activity-card" onclick="selectActivity(this,'food')">
+        <div class="activity-icon"><i class="fa-solid fa-leaf"></i></div>
+        <div class="activity-title">กิน Plant-based</div>
+        <div class="activity-reward">+60 คะแนน</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item active"><i class="fa-solid fa-house"></i>หน้าหลัก</div>
+    <div class="nav-item"><i class="fa-solid fa-map"></i>แผนที่</div>
+    <div class="nav-item"><i class="fa-solid fa-users"></i>ชุมชน</div>
+    <div class="nav-item"><i class="fa-solid fa-user"></i>โปรไฟล์</div>
+  </div>
+
+  <script>
+    let selectedActivity=null;
+    let progress=35;
+
+    function selectActivity(element,activity){
+      document.querySelectorAll('.activity-card').forEach(c=>c.classList.remove('selected'));
+      element.classList.add('selected');
+      selectedActivity=activity;
+      // demo เพิ่ม progress
+      progress+=10;
+      if(progress>100) progress=100;
+      document.getElementById('progressFill').style.width=progress+"%";
+      document.getElementById('progressText').textContent=`ความคืบหน้า: ${progress}% | ${progress<100? "ต่ออีก "+(100-progress)+"% จะโตเต็มที่":"ต้นไม้โตแล้ว! 🌳"}`;
+      if(progress>=100){document.getElementById('treeStage').textContent="🌳";}
+    }
+  </script>
+</body>
+</html>

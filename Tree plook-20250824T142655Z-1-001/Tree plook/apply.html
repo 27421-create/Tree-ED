@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>สมัครสมาชิก</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Sarabun', sans-serif;
+      background: linear-gradient(to bottom right, #f0fff4, #c6f6d5);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .form-box {
+      background: #fff;
+      padding: 28px;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      width: 100%;
+      max-width: 420px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2f855a;
+      margin-bottom: 20px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 15px;
+      background: #f9f9f9;
+    }
+
+    input:focus {
+      border-color: #38a169;
+      background: #fff;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(56,161,105,.15);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #38a169;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .btn:hover {
+      background: #2f855a;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 14px;
+      font-size: 14px;
+      color: #2f855a;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-box">
+    <h2>สมัครสมาชิก</h2>
+
+    <form action="index.html">
+      <div class="field"><input type="text" placeholder="ชื่อผู้ใช้" required></div>
+      <div class="field"><input type="email" placeholder="อีเมล" required></div>
+      <div class="field"><input type="password" placeholder="รหัสผ่าน" required></div>
+      <div class="field"><input type="password" placeholder="ยืนยันรหัสผ่าน" required></div>
+
+      <button type="submit" class="btn">สร้างบัญชี</button>
+    </form>
+
+    <a class="back-link" href="index.html">ย้อนกลับ</a>
+  </div>
+</body>
+</html>
