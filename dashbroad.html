@@ -1,0 +1,1536 @@
+</div>
+
+  <!-- Activity Submission Modal -->
+  <div id="activityModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="activityModalTitle">📸 บันทึกกิจกรรม</h3>
+        <button class="close" onclick="closeActivityModal()">×</button>
+      </div>
+      
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--green-dark)">ถ่ายรูปกิจกรรมของคุณ:</label>
+        <div id="cameraContainer" style="position:relative;width:100%;height:250px;border-radius:12px;background:#000;border:2px solid #d1d5db;overflow:hidden">
+          <video id="activityVideo" playsinline autoplay muted style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover"></video>
+          <canvas id="activitySnapshot" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:none"></canvas>
+          <div id="cameraPlaceholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#6b7280">
+            <div style="text-align:center">
+              <div style="font-size:40px;margin-bottom:8px">📷</div>
+              <div id="cameraStatus">กำลังเตรียมกล้อง...</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+          <button id="takePhotoBtn" class="primary-btn" onclick="takeActivityPhoto()" disabled style="width:auto;padding:12px 20px;font-size:14px;opacity:0.5">📷 ถ่ายรูป</button>
+          <button id="retakePhotoBtn" class="ghost-btn" onclick="retakeActivityPhoto()" style="display:none;width:auto;padding:12px 20px;font-size:14px">ถ่ายใหม่</button>
+        </div>
+      </div>
+      
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--green-dark)">อธิบายกิจกรรมที่คุณทำ:</label>
+        <textarea id="activityDescription" placeholder="เช่น: วันนี้ไปแยกขยะพลาสติกที่บ้าน แยกได้ 5 ใบ นำไปขายรับซื้อของเก่า..."></textarea>
+      </div>
+      
+      <div style="display:flex;gap:12px">
+        <button id="submitActivityBtn" class="primary-btn" onclick="submitActivity()" disabled style="opacity:0.5;background:#9ca3af">
+          🤖 ส่งให้ AI ประเมิน
+        </button>
+        <button class="ghost-btn" onclick="closeActivityModal()">ยกเลิก</button>
+      </div>
+      
+      <p class="hint">💡 AI จะประเมินจากรูปภาพและคำอธิบาย แล้วให้คะแนนที่เหมาะสม</p>
+    </div>
+  </div>
+
+  <!-- Roadmap Modal -->
+  <div id="roadmapModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🗺️ พืชลำดับถัดไป</h3>
+        <button class="close" onclick="closeRoadmap()">×</button>
+      </div>
+      <div class="chip-group">
+        <button id="chipTime"   class="chip active" onclick="setRoadmapSort('time')">⏳ เรียงตามเวลาปลูก/ความยาก</button>
+        <button id="chipRarity" class="chip"        onclick="setRoadmapSort('rarity')">⭐ เรียงตามความหายาก</button>
+      </div>
+      <div id="roadmapList" class="roadmap-list"></div>
+      <p class="hint">💡 "เวลาปลูก" อิงจากคะแนนรวมที่ต้องใช้ (totalNeeded)</p>
+    </div>
+  </div>
+
+  <script>
+    // SVG แบบง่ายที่ใช้งานได้แน่นอน
+    const SimpleSVGs = {
+      seed: `<svg viewBox="0 0 200 200" style="width:200px;height:200px">
+        <ellipse cx="100" cy="110" rx="22" ry="30" fill="#6b7b3f" stroke="#4a5327" stroke-width="2"/>
+        <ellipse cx="98" cy="105" rx="6" ry="10" fill="#8b9556" opacity="0.6"/>
+      </svg>`,
+      sprout: `<svg viewBox="0 0 200 200" style="width:200px;height:200px">
+        <rect x="96" y="100" width="8" height="46" rx="4" fill="#5a7631"/>
+        <path d="M100 98 C118 88, 130 78, 134 68 C120 70, 108 78, 100 92 Z" fill="#22c55e"/>
+        <path d="M100 108 C84 98, 72 88, 66 78 C80 80, 92 88, 100 102 Z" fill="#22c55e"/>
+      </svg>`,
+      sapling: `<svg viewBox="0 0 200 200" style="width:200px;height:200px">
+        <rect x="106" y="78" width="8" height="80" rx="4" fill="#5a7631"/>
+        <ellipse cx="110" cy="88" rx="35" ry="20" fill="#22c55e"/>
+        <ellipse cx="110" cy="105" rx="30" ry="18" fill="#16a34a"/>
+      </svg>`,
+      tree: `<svg viewBox="0 0 200 200" style="width:200px;height:200px">
+        <rect x="114" y="90" width="12" height="92" rx="6" fill="#5a7631"/>
+        <ellipse cx="120" cy="88" rx="45" ry="35" fill="#22c55e"/>
+        <ellipse cx="120" cy="95" rx="38" ry="28" fill="#16a34a"/>
+      </svg>`
+    };
+
+    // Species chain: mungbean -> basil -> sunflower -> bamboo -> oak -> sakura
+    const speciesList = [
+      { key:"mungbean", name:"ถั่วเขียว (Mung Bean)", stages:[
+          {upto:10,svg:"seed",label:"เมล็ด"}, {upto:35,svg:"sprout",label:"แตกหน่อ"},
+          {upto:65,svg:"sapling",label:"กล้า"}, {upto:100,svg:"tree",label:"โตเต็มที่"}
+        ], totalNeeded:300, rarity:1, next:"basil" },
+      { key:"basil", name:"โหระพา (Basil)", stages:[
+          {upto:15,svg:"seed",label:"เมล็ด"}, {upto:45,svg:"sprout",label:"แตกใบ"},
+          {upto:80,svg:"sapling",label:"พุ่มเล็ก"}, {upto:100,svg:"tree",label:"ให้ใบดก"}
+        ], totalNeeded:400, rarity:2, next:"sunflower" },
+      { key:"sunflower", name:"ทานตะวัน (Sunflower)", stages:[
+          {upto:20,svg:"seed",label:"เมล็ด"}, {upto:55,svg:"sprout",label:"ตั้งลำต้น"},
+          {upto:90,svg:"sapling",label:"ตูมดอก"}, {upto:100,svg:"tree",label:"บานเต็มที่"}
+        ], totalNeeded:500, rarity:2, next:"bamboo" },
+      { key:"bamboo", name:"ต้นไผ่ (Bamboo) – ยาก", stages:[
+          {upto:20,svg:"seed",label:"ท่อนพันธุ์"}, {upto:50,svg:"sprout",label:"แตกหน่อ"},
+          {upto:85,svg:"sapling",label:"ไผ่อ่อน"}, {upto:100,svg:"tree",label:"กอไผ่"}
+        ], totalNeeded:600, rarity:3, next:"oak" },
+      { key:"oak", name:"โอ๊ก (Oak) – หายาก", stages:[
+          {upto:25,svg:"seed",label:"เมล็ด"}, {upto:60,svg:"sprout",label:"กล้าไม้"},
+          {upto:95,svg:"sapling",label:"ต้นอ่อน"}, {upto:100,svg:"tree",label:"ทรงพุ่มใหญ่"}
+        ], totalNeeded:800, rarity:4, next:"sakura" },
+      { key:"sakura", name:"ซากุระ (Sakura) – ตำนาน", stages:[
+          {upto:30,svg:"seed",label:"เมล็ด"}, {upto:70,svg:"sprout",label:"แตกใบ"},
+          {upto:95,svg:"sapling",label:"กิ่งก้าน"}, {upto:100,svg:"tree",label:"ออกดอก"}
+        ], totalNeeded:1000, rarity:5, next:null }
+    ];
+
+    // Activity categories
+    const activityCategories = {
+      waste: { name: 'จัดการขยะ', icon: '♻️', basePoints: 30 },
+      transport: { name: 'การเดินทาง', icon: '🚲', basePoints: 20 },
+      energy: { name: 'ประหยัดพลังงาน', icon: '💡', basePoints: 15 },
+      nature: { name: 'รักษาธรรมชาติ', icon: '🌱', basePoints: 50 }
+    };
+
+    // State
+    let coins = 0, speciesIndex = 0, earned = 0;
+    let currentActivityCategory = null;
+    let activityStream = null;
+    let hasPhoto = false;
+
+    // DOM elements - ตรวจสอบให้แน่ใจว่าพบ elements
+    let elCoins, elVisual, elProgressFill, elProgressText, elSpeciesName, elTreeLevel, elNextSpecies;
+
+    function initializeElements() {
+      elCoins = document.getElementById('coins');
+      elVisual = document.getElementById('treeVisual');
+      elProgressFill = document.getElementById('progressFill');
+      elProgressText = document.getElementById('progressText');
+      elSpeciesName = document.getElementById('speciesName');
+      elTreeLevel = document.getElementById('treeLevel');
+      elNextSpecies = document.getElementById('nextSpecies');
+      
+      console.log('Elements found:', {
+        coins: !!elCoins,
+        visual: !!elVisual, 
+        progressFill: !!elProgressFill,
+        progressText: !!elProgressText,
+        speciesName: !!elSpeciesName,
+        treeLevel: !!elTreeLevel,
+        nextSpecies: !!elNextSpecies
+      });
+      
+      if (!elVisual) {
+        console.error('❌ ไม่พบ treeVisual element!');
+      } else {
+        console.log('✅ พบ treeVisual element แล้ว');
+      }
+    }
+
+    // Core functions
+    function percent(){ return Math.min(100, Math.round(earned / speciesList[speciesIndex].totalNeeded * 100)); }
+    function currentStage(p){ return speciesList[speciesIndex].stages.find(s=>p<=s.upto) || speciesList[speciesIndex].stages.at(-1); }
+    
+    function renderTree(stage){ 
+      console.log('🌱 แสดงต้นไม้:', stage.svg);
+      
+      const treeDiv = document.getElementById('treeVisual');
+      if (!treeDiv) {
+        console.error('❌ ไม่พบ treeVisual element');
+        return;
+      }
+      
+      // ใช้ SVG แบบง่าย
+      const svg = SimpleSVGs[stage.svg] || SimpleSVGs.seed;
+      treeDiv.innerHTML = svg;
+      
+      console.log('✅ แสดงต้นไม้เสร็จ');
+    }
+
+    // ฟังก์ชันทดสอบแสดงต้นไม้โดยตรง
+    function showTestTree() {
+      console.log('🧪 ทดสอบแสดงต้นไม้');
+      const treeDiv = document.getElementById('treeVisual');
+      if (treeDiv) {
+        treeDiv.innerHTML = `<svg viewBox="0 0 200 200" style="width:200px;height:200px;border:2px solid red">
+          <circle cx="100" cy="100" r="80" fill="#22c55e" stroke="#16a34a" stroke-width="4"/>
+          <text x="100" y="105" text-anchor="middle" fill="white" font-size="16" font-weight="bold">TEST</text>
+        </svg>`;
+        console.log('✅ ทดสอบต้นไม้แสดงเสร็จ');
+      } else {
+        console.error('❌ ไม่พบ element สำหรับทดสอบ');
+      }
+    }
+
+    function updateUI(){
+      if (elCoins) elCoins.textContent = coins;
+      
+      const p = percent();
+      if (elProgressFill) elProgressFill.style.width = p + '%';
+
+      const stage = currentStage(p);
+      renderTree(stage);
+
+      const sp = speciesList[speciesIndex];
+      if (elSpeciesName) elSpeciesName.textContent = sp.name;
+      if (elTreeLevel) elTreeLevel.textContent = (1 + Math.floor(p/20));
+      
+      if (elProgressText) {
+        elProgressText.textContent = p<100 ? 
+          `ความคืบหน้า: ${p}% | ต้องเพิ่มอีก ${100-p}% เพื่อ ${stage.label}` : 
+          `เยี่ยม! พืชชนิดนี้โตเต็มที่แล้ว 🎉`;
+      }
+      
+      if (elNextSpecies) {
+        elNextSpecies.textContent = sp.next ? 
+          (speciesList.find(s=>s.key===sp.next)?.name + " (ยากขึ้น)") : 
+          "– (สูงสุดแล้ว)";
+      }
+      
+      console.log('อัพเดท UI เสร็จ - คะแนน:', coins, 'เปอร์เซ็นต์:', p, '%');
+    }
+
+    function addProgress(points){
+      coins += points;
+      const sp = speciesList[speciesIndex];
+      earned = Math.min(sp.totalNeeded, earned + points);
+      if (earned >= sp.totalNeeded && sp.next) { 
+        setTimeout(() => {
+          const nextSpecies = speciesList.find(s=>s.key===sp.next);
+          alert(`🎉 ยินดีด้วย! ปลดล็อกพืชใหม่: ${nextSpecies?.name}`);
+        }, 500);
+        speciesIndex = speciesList.findIndex(x => x.key === sp.next); 
+        earned = 0; 
+      }
+      updateUI();
+    }
+
+    // Plant Care System
+    function careForPlant(careType) {
+      const carePoints = { water: 5, fertilizer: 10, sunlight: 8 };
+      const careNames = { water: 'รดน้ำ', fertilizer: 'ใส่ปุ๋ย', sunlight: 'เดินแสง' };
+      
+      addProgress(carePoints[careType]);
+      
+      // Visual feedback
+      const btn = document.querySelector(`[data-care="${careType}"]`);
+      if (btn && !btn.classList.contains('used')) {
+        btn.classList.add('used');
+        btn.innerHTML = `<div class="care-icon">✓</div><div>${careNames[careType]}</div><div class="care-effect">เสร็จแล้ว</div>`;
+        
+        setTimeout(() => {
+          alert(`💚 ดูแลต้นไม้ด้วยการ${careNames[careType]} +${carePoints[careType]} คะแนน\n\n🌱 ต้นไม้ของคุณมีความสุขมาก!`);
+        }, 100);
+      }
+    }
+
+    // Activity Modal Functions
+    function openActivityModal(category) {
+      console.log('เปิด modal สำหรับ:', category);
+      currentActivityCategory = category;
+      const categoryData = activityCategories[category];
+      
+      // อัปเดต UI
+      document.getElementById('activityModalTitle').textContent = `📸 ${categoryData.icon} ${categoryData.name}`;
+      document.getElementById('activityModal').classList.add('open');
+      document.getElementById('activityModal').setAttribute('aria-hidden', 'false');
+      
+      // รีเซ็ตฟอร์ม
+      hasPhoto = false;
+      const textarea = document.getElementById('activityDescription');
+      if (textarea) textarea.value = '';
+      
+      const submitBtn = document.getElementById('submitActivityBtn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+      }
+      
+      // รีเซ็ตสถานะกล้อง
+      const takeBtn = document.getElementById('takePhotoBtn');
+      const retakeBtn = document.getElementById('retakePhotoBtn');
+      const videoEl = document.getElementById('activityVideo');
+      const canvasEl = document.getElementById('activitySnapshot');
+      const placeholderEl = document.getElementById('cameraPlaceholder');
+      const statusEl = document.getElementById('cameraStatus');
+      
+      // แสดง placeholder
+      if (placeholderEl) {
+        placeholderEl.style.display = 'flex';
+        const content = placeholderEl.querySelector('div');
+        if (content) {
+          content.innerHTML = `
+            <div style="font-size:40px;margin-bottom:8px">📷</div>
+            <div>กำลังเตรียมกล้อง...</div>
+          `;
+        }
+      }
+      
+      // รีเซ็ต elements
+      if (videoEl) {
+        videoEl.style.display = 'block';
+        if (videoEl.srcObject) {
+          videoEl.srcObject.getTracks().forEach(track => track.stop());
+          videoEl.srcObject = null;
+        }
+      }
+      if (canvasEl) canvasEl.style.display = 'none';
+      if (statusEl) statusEl.textContent = 'เตรียมตัว...';
+      
+      // รีเซ็ตปุ่ม
+      if (takeBtn) {
+        takeBtn.style.display = 'inline-block';
+        takeBtn.disabled = true;
+        takeBtn.style.opacity = '0.5';
+        takeBtn.style.background = '#9ca3af';
+      }
+      if (retakeBtn) retakeBtn.style.display = 'none';
+      
+      // หยุด stream เก่า (ถ้ามี)
+      if (activityStream) {
+        activityStream.getTracks().forEach(track => track.stop());
+        activityStream = null;
+      }
+      
+      // เริ่มกล้องใหม่
+      setTimeout(() => {
+        startActivityCamera();
+      }, 1000);
+    }
+
+    function closeActivityModal() {
+      console.log('ปิด modal');
+      const modal = document.getElementById('activityModal');
+      if (modal) {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+      
+      // ปิดกล้อง
+      if (activityStream) {
+        activityStream.getTracks().forEach(track => {
+          console.log('หยุดการทำงานของกล้อง');
+          track.stop();
+        });
+        activityStream = null;
+      }
+      
+      // รีเซ็ตสถานะ
+      hasPhoto = false;
+      currentActivityCategory = null;
+    }
+
+    async function startActivityCamera() {
+      const statusEl = document.getElementById('cameraStatus');
+      const placeholderEl = document.getElementById('cameraPlaceholder');
+      const videoEl = document.getElementById('activityVideo');
+      
+      console.log('เริ่มต้นกล้อง...');
+      
+      if (statusEl) statusEl.textContent = 'กำลังขอสิทธิ์กล้อง...';
+      
+      try {
+        // ตรวจสอบว่ามีกล้องหรือไม่
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        
+        if (videoDevices.length === 0) {
+          throw new Error('ไม่พบกล้องในอุปกรณ์');
+        }
+        
+        console.log('พบกล้อง:', videoDevices.length, 'ตัว');
+        
+        // ขอสิทธิ์เข้าถึงกล้อง
+        const constraints = {
+          video: {
+            facingMode: "environment",
+            width: { ideal: 1280, min: 320 },
+            height: { ideal: 720, min: 240 }
+          },
+          audio: false
+        };
+        
+        if (statusEl) statusEl.textContent = 'กำลังเชื่อมต่อกล้อง...';
+        
+        activityStream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        if (!activityStream || !videoEl) {
+          throw new Error('ไม่สามารถเชื่อมต่อกล้องได้');
+        }
+        
+        console.log('ได้ stream แล้ว:', activityStream);
+        
+        // เชื่อมต่อ stream กับ video element
+        videoEl.srcObject = activityStream;
+        
+        // รอให้วิดีโอโหลดและเล่น
+        const waitForVideo = new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('วิดีโอไม่โหลดภายในเวลาที่กำหนด'));
+          }, 10000);
+          
+          videoEl.onloadedmetadata = () => {
+            console.log('วิดีโอโหลดเสร็จ - ขนาด:', videoEl.videoWidth, 'x', videoEl.videoHeight);
+            clearTimeout(timeout);
+            resolve();
+          };
+          
+          videoEl.oncanplay = () => {
+            console.log('วิดีโอพร้อมเล่น');
+            videoEl.play().then(() => {
+              console.log('วิดีโอเริ่มเล่นแล้ว');
+            }).catch(playError => {
+              console.error('ไม่สามารถเล่นวิดีโอได้:', playError);
+            });
+          };
+          
+          videoEl.onerror = (e) => {
+            clearTimeout(timeout);
+            reject(new Error('เกิดข้อผิดพลاดกับวิดีโอ: ' + e.message));
+          };
+        });
+        
+        await waitForVideo;
+        
+        // ซ่อน placeholder และแสดงวิดีโอ
+        if (placeholderEl) placeholderEl.style.display = 'none';
+        if (statusEl) statusEl.textContent = 'กล้องพร้อมใช้งาน';
+        
+        // เปิดใช้งานปุ่มถ่ายรูป
+        const takeBtn = document.getElementById('takePhotoBtn');
+        if (takeBtn) {
+          takeBtn.disabled = false;
+          takeBtn.style.opacity = '1';
+          takeBtn.style.background = 'var(--gradient-green)';
+        }
+        
+        console.log('กล้องพร้อมใช้งานแล้ว');
+        
+      } catch (error) {
+        console.error('เกิดข้อผิดพลาด:', error);
+        
+        let errorMessage = 'ไม่สามารถเปิดกล้องได้';
+        let suggestion = '';
+        
+        if (error.name === 'NotAllowedError') {
+          errorMessage = 'ถูกปฏิเสธการใช้กล้อง';
+          suggestion = 'กรุณาอนุญาตการใช้กล้องในเบราว์เซอร์';
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = 'ไม่พบกล้องในอุปกรณ์';
+          suggestion = 'ตรวจสอบการเชื่อมต่อกล้อง';
+        } else if (error.name === 'NotReadableError') {
+          errorMessage = 'กล้องถูกใช้งานโดยแอปอื่น';
+          suggestion = 'ปิดแอปอื่นที่ใช้กล้องแล้วลองใหม่';
+        } else if (error.name === 'OverconstrainedError') {
+          errorMessage = 'กล้องไม่รองรับการตั้งค่าที่ต้องการ';
+          suggestion = 'ลองใช้กล้องอื่น';
+        }
+        
+        if (statusEl) statusEl.textContent = errorMessage;
+        if (placeholderEl) {
+          const content = placeholderEl.querySelector('div');
+          if (content) {
+            content.innerHTML = `
+              <div style="font-size:32px;margin-bottom:8px">❌</div>
+              <div style="font-weight:600;margin-bottom:4px">${errorMessage}</div>
+              <div style="font-size:12px">${suggestion}</div>
+            `;
+          }
+        }
+        
+        alert(`${errorMessage}\n\n${suggestion}\n\nแนะนำเพิ่มเติม:\n- รีเฟรชหน้าเว็บ\n- ลองใช้เบราว์เซอร์อื่น\n- ตรวจสอบการอนุญาต`);
+      }
+    }
+
+    function takeActivityPhoto() {
+      const video = document.getElementById('activityVideo');
+      const canvas = document.getElementById('activitySnapshot');
+      const status = document.getElementById('cameraStatus');
+      
+      if (!activityStream || !video || !video.videoWidth) {
+        alert('กล้องยังไม่พร้อม กรุณารอสักครู่');
+        return;
+      }
+      
+      console.log('กำลังถ่ายรูป - ขนาดวิดีโอ:', video.videoWidth, 'x', video.videoHeight);
+      
+      try {
+        // ตั้งค่า canvas ให้เท่ากับขนาดจริงของวิดีโอ
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // แสดงภาพที่ถ่าย ซ่อนวิดีโอ
+        video.style.display = 'none';
+        canvas.style.display = 'block';
+        
+        // เปลี่ยนปุ่ม
+        document.getElementById('takePhotoBtn').style.display = 'none';
+        document.getElementById('retakePhotoBtn').style.display = 'inline-block';
+        
+        // อัปเดตสถานะ
+        hasPhoto = true;
+        if (status) status.textContent = 'ถ่ายรูปเรียบร้อย - กรอกคำอธิบายแล้วส่งประเมิน';
+        
+        // ตรวจสอบความพร้อมของปุ่มส่ง
+        checkSubmitReady();
+        console.log('ถ่ายรูปสำเร็จ - hasPhoto:', hasPhoto);
+        
+      } catch (e) {
+        console.error('เกิดข้อผิดพลาดในการถ่ายรูป:', e);
+        alert('ไม่สามารถถ่ายรูปได้ กรุณาลองใหม่');
+      }
+    }
+
+    function retakeActivityPhoto() {
+      const video = document.getElementById('activityVideo');
+      const canvas = document.getElementById('activitySnapshot');
+      const status = document.getElementById('cameraStatus');
+      
+      // แสดงวิดีโอ ซ่อนภาพที่ถ่าย
+      if (video) video.style.display = 'block';
+      if (canvas) canvas.style.display = 'none';
+      
+      // เปลี่ยนปุ่ม
+      document.getElementById('takePhotoBtn').style.display = 'inline-block';
+      document.getElementById('retakePhotoBtn').style.display = 'none';
+      
+      // รีเซ็ตสถานะ
+      hasPhoto = false;
+      if (status) status.textContent = 'พร้อมถ่ายรูปใหม่';
+      
+      checkSubmitReady();
+      console.log('เตรียมถ่ายรูปใหม่');
+    }
+
+    function checkSubmitReady() {
+      const textarea = document.getElementById('activityDescription');
+      const submitBtn = document.getElementById('submitActivityBtn');
+      
+      if (!textarea || !submitBtn) {
+        console.log('ไม่พบ elements ที่จำเป็น');
+        return;
+      }
+      
+      const description = textarea.value.trim();
+      console.log('ตรวจสอบความพร้อม - มีรูป:', hasPhoto, 'ความยาวข้อความ:', description.length);
+      
+      if (hasPhoto && description.length > 5) {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.background = 'var(--gradient-green)';
+        submitBtn.style.cursor = 'pointer';
+        console.log('ปุ่มพร้อมใช้งานแล้ว');
+      } else {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+        submitBtn.style.background = '#9ca3af';
+        submitBtn.style.cursor = 'not-allowed';
+        console.log('ปุ่มยังไม่พร้อม - รูป:', hasPhoto, 'ข้อความ:', description.length, 'ตัวอักษร');
+      }
+    }
+
+    function submitActivity() {
+      console.log('กดส่งประเมิน...');
+      
+      const textarea = document.getElementById('activityDescription');
+      const submitBtn = document.getElementById('submitActivityBtn');
+      
+      if (!textarea || !submitBtn) {
+        alert('เกิดข้อผิดพลาด: ไม่พบ elements');
+        return;
+      }
+      
+      const description = textarea.value.trim();
+      
+      if (!hasPhoto) {
+        alert('กรุณาถ่ายรูปก่อน');
+        return;
+      }
+      
+      if (description.length <= 5) {
+        alert('กรุณาเขียนคำอธิบายอย่างน้อย 6 ตัวอักษร');
+        return;
+      }
+      
+      if (!currentActivityCategory) {
+        alert('เกิดข้อผิดพลาด: ไม่พบประเภทกิจกรรม');
+        return;
+      }
+      
+      console.log('ข้อมูลครบถ้วน - เริ่มประเมิน');
+      
+      // ปิดการใช้งานปุ่มชั่วคราว
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ กำลังประเมิน...';
+      submitBtn.style.opacity = '0.7';
+      
+      try {
+        const categoryData = activityCategories[currentActivityCategory];
+        
+        // Simulate AI evaluation
+        const aiScore = evaluateActivity(description, currentActivityCategory);
+        const finalPoints = Math.round(categoryData.basePoints * aiScore.multiplier);
+        
+        console.log('AI ให้คะแนน:', aiScore.score, '/', 10, '- ได้', finalPoints, 'คะแนน');
+        
+        // เพิ่มคะแนนให้ต้นไม้
+        addProgress(finalPoints);
+        
+        // ปิด modal
+        closeActivityModal();
+        
+        // แสดงผลลัพธ์
+        setTimeout(() => {
+          const resultMessage = `🤖 AI ประเมินผลแล้ว!\n\n` +
+            `📊 คะแนนประเมิน: ${aiScore.score}/10\n` +
+            `💬 ความเห็น: "${aiScore.feedback}"\n\n` +
+            `🎉 ได้รับ ${finalPoints} คะแนน!\n\n` +
+            `${aiScore.tip}`;
+          
+          alert(resultMessage);
+        }, 500);
+        
+      } catch (error) {
+        console.error('เกิดข้อผิดพลาดในการประเมิน:', error);
+        alert('เกิดข้อผิดพลาดในการประเมิน กรุณาลองใหม่');
+        
+        // คืนค่าปุ่ม
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🤖 ส่งให้ AI ประเมิน';
+        submitBtn.style.opacity = '1';
+      }
+    }
+
+    // Simple AI evaluation simulation
+    function evaluateActivity(description, category) {
+      const wordCount = description.split(' ').length;
+      const keywordBonus = getKeywordBonus(description, category);
+      
+      let score = Math.min(10, 5 + Math.floor(wordCount / 5) + keywordBonus);
+      let multiplier = 0.5 + (score / 20);
+      
+      const feedbacks = {
+        8: "ยอดเยี่ยม! กิจกรรมชัดเจนและมีประโยชน์มาก",
+        7: "ดีมาก! เห็นความตั้งใจในการรักษาสิ่งแวดล้อม", 
+        6: "ดี! กิจกรรมมีประโยชน์ต่อสิ่งแวดล้อม",
+        5: "พอใช้ ควรอธิบายรายละเอียดเพิ่มเติม",
+        4: "ควรปรับปรุง ลองอธิบายให้ชัดเจนกว่านี้"
+      };
+      
+      const tips = {
+        waste: "💡 เคล็ดลับ: ลองบอกประเภทขยะและวิธีการแยกด้วย",
+        transport: "💡 เคล็ดลับ: ระบุระยะทางและเวลาที่ประหยัดได้", 
+        energy: "💡 เคล็ดลับ: บอกปริมาณที่ประหยัดได้จะได้คะแนนเพิ่ม",
+        nature: "💡 เคล็ดลับ: อธิบายผลกระทบดีต่อธรรมชาติจะได้คะแนนสูง"
+      };
+      
+      return {
+        score,
+        multiplier,
+        feedback: feedbacks[Math.min(8, Math.max(4, score))] || feedbacks[5],
+        tip: tips[category] || "💡 เคล็ดลับ: เขียนรายละเอียดมากขึ้นจะได้คะแนนเพิ่ม"
+      };
+    }
+
+    function getKeywordBonus(description, category) {
+      const keywords = {
+        waste: ['แยก', 'รีไซเคิล', 'ขยะ', 'ลด', 'ใช้ซ้ำ', 'ถุงผ้า'],
+        transport: ['เดิน', 'จักรยาน', 'รถเมล์', 'รถไฟ', 'ประหยัด', 'คาร์บอน'],
+        energy: ['ปิดไฟ', 'ประหยัด', 'น้ำ', 'ไฟฟ้า', 'พลังงาน', 'อนุรักษ์'],
+        nature: ['ปลูก', 'ต้นไม้', 'ธรรมชาติ', 'สิ่งแวดล้อม', 'ทำความสะอาด', 'อนุรักษ์']
+      };
+      
+      const categoryKeywords = keywords[category] || [];
+      const lowerDesc = description.toLowerCase();
+      
+      return categoryKeywords.filter(keyword => 
+        lowerDesc.includes(keyword)
+      ).length;
+    }
+
+    // Demo functions
+    function resetProgress(){ 
+      if(confirm('คุณแน่ใจหรือไม่ที่จะเริ่มต้นใหม่?')) {
+        coins=0; speciesIndex=0; earned=0; updateUI(); 
+      }
+    }
+
+    function jumpToSpecies(targetSpecies) {
+      const targetIndex = speciesList.findIndex(s => s.key === targetSpecies);
+      if(targetIndex !== -1) {
+        speciesIndex = targetIndex;
+        earned = 0;
+        updateUI();
+        setTimeout(() => {
+          alert(`🌱 ข้ามไปยัง: ${speciesList[targetIndex].name}`);
+        }, 100);
+      }
+    }
+
+    // Roadmap functions
+    const roadmapModal=document.getElementById('roadmapModal'); 
+    const roadmapList=document.getElementById('roadmapList');
+    const chipTime=document.getElementById('chipTime'); 
+    const chipRarity=document.getElementById('chipRarity'); 
+    let roadmapSort='time';
+
+    function openRoadmap(){ 
+      roadmapModal.classList.add('open'); 
+      roadmapModal.setAttribute('aria-hidden','false'); 
+      renderRoadmap(); 
+    }
+
+    function closeRoadmap(){ 
+      roadmapModal.classList.remove('open'); 
+      roadmapModal.setAttribute('aria-hidden','true'); 
+    }
+
+    function getNextChain(){ 
+      const arr=[]; 
+      let key=speciesList[speciesIndex].next; 
+      while(key){ 
+        const sp=speciesList.find(s=>s.key===key); 
+        if(!sp) break; 
+        arr.push(sp); 
+        key=sp.next; 
+      } 
+      return arr; 
+    }
+
+    function stars(n){ 
+      return '★'.repeat(Math.min(5,n)) + '☆'.repeat(Math.max(0,5-n)); 
+    }
+
+    function renderRoadmap(){
+      const items=getNextChain();
+      if(!items.length){ 
+        roadmapList.innerHTML='<div class="hint">🎉 ยินดีด้วย! คุณได้ปลดล็อกพืชทั้งหมดแล้ว</div>'; 
+        return; 
+      }
+      
+      const sorted=[...items].sort((a,b)=> 
+        roadmapSort==='time' ? a.totalNeeded-b.totalNeeded : (b.rarity||1)-(a.rarity||1)
+      );
+      
+      roadmapList.innerHTML = sorted.map((sp,idx)=>`
+        <div class="roadmap-card">
+          <div class="rm-left">
+            <div class="rm-rank">${idx+1}</div>
+            <div>
+              <div class="rm-name">${sp.name}</div>
+              <div class="rm-meta">ต้องใช้คะแนนรวม ≈ <b>${sp.totalNeeded.toLocaleString()}</b> | <span class="rm-stars">${stars(sp.rarity||1)}</span></div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:#166534;background:linear-gradient(135deg,#ecfdf5,#f0fdf4);border:1px solid #bbf7d0;padding:8px 12px;border-radius:20px;font-weight:600">🔒 ยังไม่ปลดล็อก</div>
+        </div>`).join('');
+    }
+
+    function setRoadmapSort(mode){ 
+      roadmapSort=mode; 
+      chipTime.classList.toggle('active',mode==='time'); 
+      chipRarity.classList.toggle('active',mode==='rarity'); 
+      renderRoadmap(); 
+    }
+
+    // Initialize และแสดงต้นไม้
+    function initializeApp() {
+      console.log('🚀 เริ่มต้น Green AR App');
+      
+      // ทดสอบแสดงต้นไม้ทันที
+      setTimeout(() => {
+        showTestTree();
+      }, 100);
+      
+      // แสดงต้นไม้จริงหลังจากนั้น
+      setTimeout(() => {
+        console.log('🌱 แสดงต้นไม้จริง');
+        renderTree({svg: 'seed'});
+        updateUI();
+      }, 500);
+      
+      // ลองอีกครั้งเพื่อให้แน่ใจ
+      setTimeout(() => {
+        console.log('🔄 แสดงต้นไม้อีกครั้ง');
+        const stage = currentStage(percent());
+        renderTree(stage);
+      }, 1000);
+    }
+
+    // Event Listeners สำหรับ textarea
+    function initEventListeners() {
+      console.log('ตั้งค่า event listeners...');
+      
+      // ใช้ event delegation แทนการผูก element โดยตรง
+      document.addEventListener('input', function(e) {
+        if (e.target && e.target.id === 'activityDescription') {
+          console.log('กำลังพิมพ์คำอธิบาย...');
+          checkSubmitReady();
+        }
+      });
+      
+      // เพิ่ม listener สำหรับ submit button
+      document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'submitActivityBtn') {
+          console.log('คลิกปุ่มส่งประเมิน');
+          if (!e.target.disabled) {
+            submitActivity();
+          } else {
+            console.log('ปุ่มยังไม่พร้อมใช้งาน');
+          }
+        }
+      });
+      
+      console.log('Event listeners ตั้งค่าเสร็จ');
+    }
+
+    // เรียกใช้ทันทีเมื่อโหลดหน้า
+    initializeElements();
+    initializeApp();
+
+    // เรียกใช้ event listeners
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initEventListeners);
+    } else {
+      initEventListeners();
+    }
+  </script>
+</body>
+</html>
+        <!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>Green AR – Grow by Green Actions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{ 
+      --green:#38a169; --green-dark:#2f855a; --green-light:#48cc76; 
+      --bg1:#f0fff4; --bg2:#c6f6d5; --card:#fff; --text:#2d3748; --muted:#6b7280; 
+      --shadow-light:rgba(56,161,105,.08); --shadow-med:rgba(56,161,105,.15); --shadow-heavy:rgba(56,161,105,.25);
+      --gradient-green:linear-gradient(135deg, #38a169 0%, #48cc76 100%);
+      --gradient-bg:linear-gradient(135deg, #f0fff4 0%, #e6fffa 25%, #c6f6d5 100%);
+    }
+    
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    
+    body{ 
+      font-family:'Sarabun',sans-serif;color:var(--text); 
+      background:var(--gradient-bg);
+      background-attachment:fixed;
+      display:flex;justify-content:center;align-items:stretch;min-height:100dvh; 
+      position:relative;
+      overflow-x:hidden;
+    }
+
+    .app{
+      width:clamp(320px,92vw,540px);
+      display:flex;flex-direction:column;min-height:100dvh;
+      position:relative;
+      z-index:1;
+    }
+
+    header{ 
+      position:sticky;top:0;z-index:10;
+      background:rgba(255,255,255,.95);
+      backdrop-filter:blur(20px);
+      padding:16px 20px;
+      border-bottom:1px solid rgba(229,231,235,.5);
+      border-radius:20px 20px 0 0; 
+      display:flex;justify-content:space-between;align-items:center;
+      box-shadow:0 8px 32px rgba(0,0,0,.06);
+    }
+
+    .app-title {
+      font-size:20px;
+      font-weight:800;
+      background:var(--gradient-green);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .points{
+      background:var(--gradient-green);
+      color:#fff;
+      padding:10px 16px;
+      border-radius:25px;
+      font-weight:700;
+      font-size:14px;
+      box-shadow:0 4px 16px var(--shadow-med);
+      position:relative;
+      overflow:hidden;
+    }
+
+    main{
+      flex:1;
+      background:rgba(255,255,255,.9);
+      backdrop-filter:blur(20px);
+      padding:24px;
+      border-radius:0 0 20px 20px;
+      box-shadow:0 12px 40px rgba(0,0,0,.08);
+      padding-bottom:120px;
+      position:relative;
+    }
+
+    /* Enhanced tree spotlight */
+    .tree-container{text-align:center;margin:12px 0 20px}
+    
+    .tree-spot{ 
+      --size:280px;
+      width:var(--size);height:var(--size);
+      margin:12px auto 0;
+      border-radius:50%;
+      position:relative;
+      display:grid;place-items:center;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.8) 0%, transparent 50%),
+        radial-gradient(circle at 50% 45%, #d9fbe0 0%, #bdf6c6 60%, #a6efb9 80%, transparent 85%);
+      box-shadow:
+        0 0 0 8px rgba(56,161,105,.06),
+        0 0 0 16px rgba(56,161,105,.03),
+        0 20px 60px rgba(56,161,105,.35),
+        inset 0 20px 40px rgba(255,255,255,.6);
+      animation:glow 6s ease-in-out infinite;
+    }
+    
+    .tree-spot::after{ 
+      content:""; position:absolute; left:50%; bottom:8%; transform:translateX(-50%);
+      width:65%; height:20%; 
+      background:radial-gradient(ellipse at center, rgba(0,0,0,.15), rgba(0,0,0,0) 70%);
+      filter:blur(12px); opacity:.4; border-radius:50%;
+    }
+    
+    @keyframes glow{
+      0%,100%{
+        box-shadow:
+          0 0 0 8px rgba(56,161,105,.06),
+          0 0 0 16px rgba(56,161,105,.03),
+          0 20px 60px rgba(56,161,105,.35),
+          inset 0 20px 40px rgba(255,255,255,.6);
+      }
+      50%{
+        box-shadow:
+          0 0 0 8px rgba(56,161,105,.12),
+          0 0 0 16px rgba(56,161,105,.06),
+          0 30px 80px rgba(56,161,105,.5),
+          inset 0 25px 50px rgba(255,255,255,.8);
+      }
+    }
+    
+    .tree-visual{
+      width:200px;height:200px;
+      display:grid;place-items:center;
+      filter:drop-shadow(0 12px 24px rgba(0,0,0,.2));
+      animation:sway 4s ease-in-out infinite, pop 3s ease-in-out infinite alternate;
+      position:relative;
+    }
+    
+    .tree-visual svg{width:200px;height:200px;display:block}
+    
+    @keyframes sway{
+      0%,100%{transform:rotate(-3deg) scale(1)}
+      50%{transform:rotate(3deg) scale(1.02)}
+    }
+    
+    @keyframes pop{
+      from{transform:scale(1)}
+      to{transform:scale(1.08)}
+    }
+
+    /* Enhanced info card */
+    .tree-info{
+      margin-top:20px;
+      background:linear-gradient(135deg, rgba(247,253,248,.95) 0%, rgba(236,253,245,.9) 100%);
+      backdrop-filter:blur(10px);
+      border-radius:20px;
+      padding:20px 18px;
+      border:1px solid rgba(209,250,229,.6);
+      box-shadow:0 8px 32px rgba(0,0,0,.04);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .tree-info::before {
+      content:"";
+      position:absolute;
+      top:0;left:0;right:0;
+      height:2px;
+      background:var(--gradient-green);
+    }
+    
+    .info-head{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+      margin-bottom:4px;
+    }
+    
+    .tree-name{
+      color:var(--green-dark);
+      font-weight:800;
+      font-size:18px;
+    }
+    
+    .lvl-badge{
+      background:linear-gradient(135deg, #e8ffe7 0%, #dcfce7 100%);
+      border:1px solid #bbf7d0;
+      color:#166534;
+      font-weight:700;
+      border-radius:20px;
+      padding:8px 14px;
+      font-size:12px;
+      box-shadow:0 2px 8px rgba(22,101,52,.1);
+    }
+    
+    .progress-bar{
+      height:16px;
+      border-radius:12px;
+      background:#e5e7eb;
+      margin:16px 0;
+      overflow:hidden;
+      box-shadow:inset 0 2px 6px rgba(0,0,0,.1);
+      position:relative;
+    }
+    
+    .progress-fill{
+      height:100%;width:0;
+      background:linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #84cc16 100%);
+      transition:width .6s cubic-bezier(0.4, 0, 0.2, 1);
+      position:relative;
+      border-radius:12px;
+    }
+    
+    .stat-row{
+      display:flex;justify-content:space-between;gap:16px;align-items:center;
+      margin-top:12px;
+    }
+    
+    .progress-text{font-size:14px;color:var(--muted);font-weight:500}
+    .next-label{font-size:14px;color:#0f5132;font-weight:600}
+    
+    .info-actions{
+      display:flex;justify-content:flex-end;
+      margin-top:16px;
+    }
+    
+    .btn-pill{
+      background:linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+      border:1px solid #bbf7d0;
+      color:#166534;
+      border-radius:25px;
+      padding:10px 16px;
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all .3s ease;
+      box-shadow:0 2px 8px rgba(0,0,0,.04);
+    }
+    
+    .btn-pill:hover{
+      background:linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+      transform:translateY(-2px);
+      box-shadow:0 4px 16px rgba(22,101,52,.15);
+    }
+
+    /* Category Cards */
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .category-card {
+      background: linear-gradient(135deg, #fff 0%, #fafafa 100%);
+      border: 2px solid transparent;
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,.05);
+    }
+
+    .category-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--green);
+      background: linear-gradient(135deg, #f0fff4 0%, #ecfdf5 100%);
+      box-shadow: 0 8px 25px rgba(56,161,105,.15);
+    }
+
+    .category-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .category-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--green-dark);
+      margin-bottom: 4px;
+    }
+
+    .category-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.3;
+    }
+
+    /* Plant Care Grid */
+    .plant-care-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .care-btn {
+      background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+      border: 1px solid #d1fae5;
+      border-radius: 12px;
+      padding: 12px 8px;
+      cursor: pointer;
+      transition: all .3s ease;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .care-btn:hover {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border-color: var(--green);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16,185,129,.15);
+    }
+
+    .care-btn.used {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+      color: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .care-icon {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .care-effect {
+      font-size: 10px;
+      color: var(--green-dark);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .primary-btn, .ghost-btn{
+      width:100%;
+      padding:16px;
+      border:none;
+      border-radius:16px;
+      font-size:16px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all .3s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    
+    .primary-btn{
+      background:var(--gradient-green);
+      color:#fff;
+      box-shadow:0 4px 20px var(--shadow-med);
+    }
+    
+    .primary-btn:hover{
+      background:linear-gradient(135deg, #2f855a 0%, #38a169 100%);
+      transform:translateY(-2px);
+      box-shadow:0 8px 32px var(--shadow-heavy);
+    }
+    
+    .ghost-btn{
+      background:linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+      border:1px solid #d1d5db;
+      color:var(--text);
+      box-shadow:0 2px 8px rgba(0,0,0,.04);
+    }
+
+    .ghost-btn:hover{
+      background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      transform:translateY(-2px);
+      box-shadow:0 4px 16px rgba(0,0,0,.08);
+    }
+
+    /* Enhanced bottom navigation */
+    .bottom{
+      position:fixed;left:0;right:0;bottom:0;
+      display:flex;justify-content:center;
+      padding:12px;
+      z-index:20;
+    }
+    
+    .bottom > div{
+      width:clamp(320px,92vw,540px);
+      background:rgba(255,255,255,.95);
+      backdrop-filter:blur(20px);
+      border:1px solid rgba(229,231,235,.5);
+      border-radius:20px;
+      display:flex;justify-content:space-around;align-items:center;
+      padding:8px;
+      box-shadow:0 8px 32px rgba(0,0,0,.15);
+    }
+    
+    .navbtn{
+      background:none;border:none;
+      display:flex;flex-direction:column;align-items:center;
+      gap:4px;cursor:pointer;
+      color:#6b7280;
+      padding:12px 8px;
+      border-radius:16px;
+      transition:all .3s ease;
+      position:relative;
+    }
+
+    .navbtn:hover {
+      background:rgba(56,161,105,.05);
+      transform:translateY(-2px);
+    }
+    
+    .navbtn small{font-size:10px;font-weight:500}
+    
+    .navbtn.active{
+      color:var(--green-dark);
+      font-weight:700;
+      background:linear-gradient(135deg, rgba(56,161,105,.1) 0%, rgba(72,204,118,.08) 100%);
+    }
+
+    /* Enhanced modals */
+    .modal{
+      position:fixed;inset:0;
+      background:rgba(0,0,0,.6);
+      backdrop-filter:blur(8px);
+      display:none;align-items:center;justify-content:center;
+      padding:20px;
+      z-index:50;
+    }
+    
+    .modal.open{display:flex;animation:fadeIn .3s ease}
+
+    @keyframes fadeIn {
+      from { opacity:0; }
+      to { opacity:1; }
+    }
+    
+    .modal-card{
+      background:linear-gradient(135deg, #fff 0%, #fafafa 100%);
+      border-radius:24px;
+      max-width:560px;width:100%;
+      padding:24px;
+      box-shadow:0 20px 60px rgba(0,0,0,.3);
+      transform:translateY(20px);
+      animation:slideUp .3s ease forwards;
+      position:relative;
+    }
+
+    @keyframes slideUp {
+      to { transform:translateY(0); }
+    }
+    
+    .modal-header{
+      display:flex;justify-content:space-between;align-items:center;
+      margin-bottom:16px;
+      padding-bottom:12px;
+      border-bottom:1px solid #e5e7eb;
+    }
+
+    .modal-header h3 {
+      font-size:20px;
+      font-weight:700;
+      color:var(--green-dark);
+    }
+    
+    .close{
+      border:none;
+      background:rgba(107,114,128,.1);
+      font-size:20px;
+      cursor:pointer;
+      width:36px;height:36px;
+      border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      transition:all .2s ease;
+    }
+
+    .close:hover {
+      background:rgba(239,68,68,.1);
+      color:#dc2626;
+    }
+    
+    .hint{
+      font-size:13px;
+      color:#64748b;
+      margin:8px 0 16px;
+      padding:12px;
+      background:rgba(148,163,184,.05);
+      border-radius:12px;
+      border-left:3px solid var(--green);
+    }
+
+    /* Enhanced chip and roadmap styles */
+    .chip-group{display:flex;gap:8px;margin:12px 0 16px;flex-wrap:wrap}
+    
+    .chip{
+      padding:10px 16px;
+      border-radius:20px;
+      border:1px solid #e5e7eb;
+      background:linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+      color:#374151;
+      font-size:13px;
+      font-weight:500;
+      cursor:pointer;
+      transition:all .2s ease;
+    }
+    
+    .chip:hover{
+      transform:translateY(-1px);
+      box-shadow:0 2px 8px rgba(0,0,0,.08);
+    }
+    
+    .chip.active{
+      border-color:#bbf7d0;
+      background:var(--gradient-green);
+      color:#fff;
+      box-shadow:0 2px 12px var(--shadow-med);
+    }
+    
+    .roadmap-list{
+      display:grid;gap:12px;
+      max-height:min(52vh,420px);
+      overflow:auto;
+      padding-right:4px;
+    }
+    
+    .roadmap-card{
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      padding:16px;
+      background:linear-gradient(135deg, #fff 0%, #fafafa 100%);
+      display:flex;justify-content:space-between;align-items:center;
+      gap:16px;
+      transition:all .3s ease;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .roadmap-card:hover {
+      transform:translateX(4px);
+      box-shadow:0 4px 20px rgba(0,0,0,.08);
+    }
+    
+    .rm-left{display:flex;align-items:center;gap:16px}
+    
+    .rm-rank{
+      width:32px;height:32px;
+      border-radius:12px;
+      background:var(--gradient-green);
+      color:#fff;
+      display:grid;place-items:center;
+      font-weight:800;
+      font-size:14px;
+      box-shadow:0 2px 8px var(--shadow-med);
+    }
+    
+    .rm-name{font-weight:700;font-size:16px;margin-bottom:4px}
+    .rm-meta{font-size:12px;color:#64748b;font-weight:500}
+    .rm-stars{font-size:14px;color:#f59e0b}
+
+    /* Enhanced camera styles */
+    #activityVideo, #activitySnapshot {
+      width:100%;
+      border-radius:12px;
+      margin:12px 0;
+      box-shadow:0 4px 20px rgba(0,0,0,.15);
+    }
+
+    /* Textarea styling */
+    #activityDescription {
+      width:100%;
+      padding:12px;
+      border:1px solid #d1d5db;
+      border-radius:12px;
+      font-size:14px;
+      min-height:80px;
+      resize:vertical;
+      font-family:'Sarabun',sans-serif;
+    }
+
+    #activityDescription:focus {
+      outline: none;
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(56,161,105,.1);
+    }
+
+    /* Demo button hover effects */
+    .demo-btn:hover {
+      transform:translateY(-1px);
+      box-shadow:0 2px 8px rgba(0,0,0,.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="app-title">🌱 Green AR</div>
+      <div class="points"><span id="coins">0</span> คะแนน</div>
+    </header>
+
+    <main>
+      <section class="tree-container">
+        <div class="tree-spot">
+          <div id="treeVisual" class="tree-visual" aria-label="tree-stage">
+            <!-- แสดงเมล็ดตั้งแต่แรก -->
+            <svg viewBox="0 0 200 200" style="width:200px;height:200px">
+              <ellipse cx="100" cy="110" rx="22" ry="30" fill="#6b7b3f" stroke="#4a5327" stroke-width="2"/>
+              <ellipse cx="98" cy="105" rx="6" ry="10" fill="#8b9556" opacity="0.6"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Info card -->
+        <div class="tree-info">
+          <div class="info-head">
+            <div class="tree-name"><span id="speciesName">ถั่วเขียว (Mung Bean)</span></div>
+            <div class="lvl-badge">ระดับ <b id="treeLevel">1</b></div>
+          </div>
+
+          <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+
+          <div class="stat-row">
+            <div class="progress-text" id="progressText">ความคืบหน้า: 0% | ต้องเพิ่มอีก 100% เพื่อ แตกหน่อ</div>
+            <div class="next-label"><b>พืชถัดไป:</b> <span id="nextSpecies">โหระพา (ยากขึ้น)</span></div>
+          </div>
+
+          <div class="info-actions">
+            <button class="btn-pill" onclick="openRoadmap()">🌿 ดูพืชลำดับถัดไป</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Environmental Activities -->
+      <section class="actions">
+        <h3 style="font-size:18px;font-weight:700;color:var(--green-dark);margin-bottom:16px;text-align:center">🌍 กิจกรรมรักษาสิ่งแวดล้อม</h3>
+        
+        <!-- Main Categories -->
+        <div class="category-grid">
+          <div class="category-card" onclick="openActivityModal('waste')">
+            <div class="category-icon">♻️</div>
+            <div class="category-title">จัดการขยะ</div>
+            <div class="category-desc">รีไซเคิล ลดขยะ คัดแยก</div>
+          </div>
+          
+          <div class="category-card" onclick="openActivityModal('transport')">
+            <div class="category-icon">🚲</div>
+            <div class="category-title">การเดินทาง</div>
+            <div class="category-desc">เดิน ปั่น ขนส่งสาธารณะ</div>
+          </div>
+          
+          <div class="category-card" onclick="openActivityModal('energy')">
+            <div class="category-icon">💡</div>
+            <div class="category-title">ประหยัดพลังงาน</div>
+            <div class="category-desc">ปิดไฟ ประหยัดน้ำ</div>
+          </div>
+          
+          <div class="category-card" onclick="openActivityModal('nature')">
+            <div class="category-icon">🌱</div>
+            <div class="category-title">รักษาธรรมชาติ</div>
+            <div class="category-desc">ปลูกต้นไม้ ทำความสะอาด</div>
+          </div>
+        </div>
+
+        <!-- Plant Care Section -->
+        <div style="margin-top:24px;padding:16px;background:linear-gradient(135deg,#f0fff4,#ecfdf5);border-radius:16px;border:1px solid #bbf7d0">
+          <h4 style="font-size:16px;font-weight:700;color:var(--green-dark);margin-bottom:12px;text-align:center">🌿 ดูแลต้นไม้ของคุณ</h4>
+          <div class="plant-care-grid">
+            <button class="care-btn" onclick="careForPlant('water')" data-care="water">
+              <div class="care-icon">💧</div>
+              <div>รดน้ำ</div>
+              <div class="care-effect">+5 คะแนน</div>
+            </button>
+            
+            <button class="care-btn" onclick="careForPlant('fertilizer')" data-care="fertilizer">
+              <div class="care-icon">🪴</div>
+              <div>ใส่ปุ๋ย</div>
+              <div class="care-effect">+10 คะแนน</div>
+            </button>
+            
+            <button class="care-btn" onclick="careForPlant('sunlight')" data-care="sunlight">
+              <div class="care-icon">☀️</div>
+              <div>เดินแสง</div>
+              <div class="care-effect">+8 คะแนน</div>
+            </button>
+          </div>
+          <p style="font-size:12px;color:#059669;text-align:center;margin-top:8px">💡 ดูแลต้นไม้เป็นประจำจะช่วยให้โตเร็วขึ้น</p>
+        </div>
+
+        <div style="margin-top:16px">
+          <button class="ghost-btn" onclick="resetProgress()">เริ่มต้นใหม่</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<!-- Bottom nav -->
+<div class="bottom">
+  <div>
+    <button class="navbtn active" onclick="location.href='dashbroad.html'">
+      <div>🏠</div>
+      <small>หน้าหลัก</small>
+    </button>
+
+    <button class="navbtn" onclick="location.href='map.html'">
+      <div>🗺️</div>
+      <small>แผนที่</small>
+    </button>
+
+    <button class="navbtn" onclick="location.href='community.html'">
+      <div>👥</div>
+      <small>ชุมชน</small>
+    </button>
+
+    <button class="navbtn" onclick="location.href='profile.html'">
+      <div>👤</div>
+      <small>โปรไฟล์</small>
+    </button>
+  </div>

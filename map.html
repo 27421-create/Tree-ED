@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>แผนที่กิจกรรมสิ่งแวดล้อม</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: "Sarabun", sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
+    #map {
+      flex: 1;
+      width: 100%;
+    }
+    /* bottom navigation */
+    .bottom {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      display: flex; justify-content: center;
+      padding: 10px;
+      background: transparent;
+      z-index: 1000;
+    }
+    .bottom > div {
+      width: clamp(320px, 92vw, 540px);
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      display: flex; justify-content: space-around; align-items: center;
+      padding: 8px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.15);
+    }
+    .navbtn {
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .navbtn small {
+      font-size: 11px;
+    }
+    .navbtn.active {
+      color: #2f855a;
+      font-weight: 700;
+    }
+    /* popup button */
+    .btn-claim {
+      background: #38a169;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-claim:hover {
+      background: #2f855a;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- bottom navigation -->
+  <div class="bottom">
+    <div>
+      <button class="navbtn" onclick="location.href='dashbroad.html'"><div>🏠</div><small>หน้าหลัก</small></button>
+      <button class="navbtn active" onclick="location.href='map.html'"><div>🗺️</div><small>แผนที่</small></button>
+      <button class="navbtn" onclick="location.href='community.html'"><div>👥</div><small>ชุมชน</small></button>
+      <button class="navbtn" onclick="location.href='profile.html'"><div>👤</div><small>โปรไฟล์</small></button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // กำหนด icon
+    const icons = {
+      tree: L.icon({ iconUrl: "https://cdn-icons-png.flaticon.com/512/427/427735.png", iconSize: [32, 32] }),
+      recycle: L.icon({ iconUrl: "https://cdn-icons-png.flaticon.com/512/3064/3064197.png", iconSize: [32, 32] }),
+      cleanup: L.icon({ iconUrl: "https://cdn-icons-png.flaticon.com/512/1828/1828884.png", iconSize: [32, 32] })
+    };
+
+    // ฟังก์ชันสุ่ม marker รอบผู้ใช้
+    function generateMarkers(lat, lng) {
+      const points = [];
+      // ความน่าจะเป็นในการสุ่ม (ต้นไม้ 50%, รีไซเคิล 30%, ทำความสะอาด 20%)
+      const weightedTypes = [
+        "tree","tree","tree","tree","tree",
+        "recycle","recycle","recycle",
+        "cleanup","cleanup"
+      ];
+
+      const names = { tree: "ต้นไม้", recycle: "จุดรีไซเคิล", cleanup: "พื้นที่ทำความสะอาด" };
+      const rewards = { tree: "+60 คะแนน", recycle: "+50 คะแนน", cleanup: "+40 คะแนน" };
+
+      for (let i = 0; i < 25; i++) {
+        const t = weightedTypes[Math.floor(Math.random() * weightedTypes.length)];
+        const offsetLat = (Math.random() - 0.5) * 0.01; // กระจายรัศมี ~1 กม.
+        const offsetLng = (Math.random() - 0.5) * 0.01;
+        points.push({ lat: lat + offsetLat, lng: lng + offsetLng, type: t, name: names[t], reward: rewards[t] });
+      }
+      return points;
+    }
+
+    // เริ่มต้น map
+    const map = L.map("map").setView([13.7563, 100.5018], 14);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 20, attribution: "© OpenStreetMap"
+    }).addTo(map);
+
+    // ตรวจสอบตำแหน่งผู้ใช้
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude, lng = pos.coords.longitude;
+        map.setView([lat, lng], 15);
+
+        // แสดงจุดผู้ใช้
+        L.marker([lat, lng]).addTo(map).bindPopup("📍 คุณอยู่ที่นี่").openPopup();
+
+        // แสดงภารกิจสุ่ม
+        generateMarkers(lat, lng).forEach(p => {
+          L.marker([p.lat, p.lng], { icon: icons[p.type] })
+            .addTo(map)
+            .bindPopup(`<b>${p.name}</b><br>${p.reward}<br><button class="btn-claim">✅ ทำภารกิจ</button>`);
+        });
+      }, err => alert("❌ ไม่สามารถหาตำแหน่งได้: " + err.message));
+    } else {
+      alert("เบราว์เซอร์นี้ไม่รองรับ GPS");
+    }
+  </script>
+</body>
+</html>
